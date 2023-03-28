@@ -15,7 +15,7 @@ function Sidebar() {
                 </div>
 
                 <div className='profile_stats'>
-                    <span>Who viewed your profile</span>
+                    <span className='view'>Who's viewed your profile</span>
                     <span className='stat_num'> 20 </span>
                 </div>
                 <div className='profile_stats'>
