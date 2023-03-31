@@ -1,19 +1,53 @@
-import React from 'react'
+import React, { useEffect, useState } from 'react'
 import { Avatar } from '@mui/material';
 import AddPhotoAlternateIcon from '@mui/icons-material/AddPhotoAlternate';
 import YouTubeIcon from '@mui/icons-material/YouTube';
 import WorkIcon from '@mui/icons-material/Work';
 import FeedIcon from '@mui/icons-material/Feed';
+import { selectUser } from '../features/userSlice';
+import { useSelector } from 'react-redux/es/exports';
 import "../css/feed.css";
 import Post from './Post';
+
+import FlipMove from 'react-flip-move';
+
+import firebase from 'firebase/compat/app';
+import { db } from '../firebase';
+
 function Feed() {
+    const user = useSelector(selectUser);
+
+    const [post, setPost] = useState([]);
+    const [input, setInput] = useState();
+    const submitPost = (e) => {
+        e.preventDefault();
+        db.collection("posts").add({
+            name: user.displayName,
+            description: "Developer",
+            message: input,
+            photoURL: user.photoURL,
+            timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+        });
+
+        setInput("");
+    }
+
+    useEffect(() => {
+        db.collection("posts").orderBy("timestamp", "desc").onSnapshot(snapshot => {
+            setPost(snapshot.docs.map(doc => ({
+                id: doc.id,
+                data: doc.data()
+            })))
+        })
+    }, [])
+
     return (
         <div className="feed">
             <div className="feed_input">
                 <div className='feed_form'>
-                    <Avatar />
-                    <form>
-                        <input type="text" placeholder='Start a post' />
+                    <Avatar src={user.photoURL} />
+                    <form onSubmit={submitPost}>
+                        <input type="text" placeholder='Start a post' value={input} onChange={e => setInput(e.target.value)} />
                         <input type="submit" />
                     </form>
                 </div>
@@ -37,12 +71,15 @@ function Feed() {
                     </div>
                 </div>
             </div>
-            <Post name="Kiran Kumar Sahu" description="For test purpose only" message="We are learning" photoURL="" />
-            <Post name="Kiran Kumar Sahu" description="For test purpose only" message="We are learning" photoURL="" />
-            <Post name="Kiran Kumar Sahu" description="For test purpose only" message="We are learning" photoURL="" />
-            <Post name="Kiran Kumar Sahu" description="For test purpose only" message="We are learning" photoURL="" />
+            <FlipMove>
+                {
+                    post.map(({ id, data: { name, description, message, photoURL } }) => {
+                        return <Post key={id} name={name} description={description} message={message} photoURL={photoURL} />
+                    })
+                }
+            </FlipMove>
         </div>
     )
 }
 
-export default Feed
+export default Feed;
